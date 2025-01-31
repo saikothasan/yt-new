@@ -11,6 +11,8 @@ interface Video {
     thumbnails: {
       medium: {
         url: string
+        width: number
+        height: number
       }
     }
     channelTitle: string
@@ -35,17 +37,20 @@ export function VideoCard({ video, layout = "grid" }: VideoCardProps) {
   const videoId = typeof video.id === "string" ? video.id : video.id.videoId
   const viewCount = video.statistics?.viewCount ? formatViews(video.statistics.viewCount) : "N/A"
   const duration = video.contentDetails?.duration ? formatDuration(video.contentDetails.duration) : null
+  const thumbnail = video.snippet.thumbnails.medium
 
   if (layout === "list") {
     return (
       <Link href={`/watch?v=${videoId}`}>
         <div className="flex gap-4 group">
-          <div className="relative aspect-video w-64 rounded-xl overflow-hidden flex-shrink-0">
+          <div className="relative aspect-video w-64 rounded-xl overflow-hidden flex-shrink-0 bg-muted">
             <Image
-              src={video.snippet.thumbnails.medium.url || "/placeholder.svg"}
+              src={thumbnail.url || "/placeholder.svg"}
               alt={video.snippet.title}
-              fill
+              width={thumbnail.width}
+              height={thumbnail.height}
               className="object-cover transition-transform group-hover:scale-105"
+              unoptimized // Add this to bypass Image Optimization API
             />
             {duration && (
               <div className="absolute bottom-1 right-1 bg-black/80 px-1 rounded text-xs text-white">{duration}</div>
@@ -72,12 +77,14 @@ export function VideoCard({ video, layout = "grid" }: VideoCardProps) {
   return (
     <Link href={`/watch?v=${videoId}`}>
       <div className="group cursor-pointer">
-        <div className="aspect-video relative rounded-xl overflow-hidden">
+        <div className="aspect-video relative rounded-xl overflow-hidden bg-muted">
           <Image
-            src={video.snippet.thumbnails.medium.url || "/placeholder.svg"}
+            src={thumbnail.url || "/placeholder.svg"}
             alt={video.snippet.title}
-            fill
+            width={thumbnail.width}
+            height={thumbnail.height}
             className="object-cover transition-transform group-hover:scale-105"
+            unoptimized // Add this to bypass Image Optimization API
           />
           {duration && (
             <div className="absolute bottom-1 right-1 bg-black/80 px-1 rounded text-xs text-white">{duration}</div>
