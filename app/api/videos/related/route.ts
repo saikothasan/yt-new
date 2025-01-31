@@ -13,23 +13,23 @@ export async function GET(request: Request) {
   const maxResults = 10
 
   try {
-    const url = `${baseUrl}/search?part=snippet&relatedToVideoId=${videoId}&type=video&maxResults=${maxResults}&key=${apiKey}`
+    // First, fetch related videos
+    const relatedUrl = `${baseUrl}/search?part=snippet&relatedToVideoId=${videoId}&type=video&maxResults=${maxResults}&key=${apiKey}`
+    const relatedResponse = await fetch(relatedUrl)
+    const relatedData = await relatedResponse.json()
 
-    const response = await fetch(url)
-    const data = await response.json()
-
-    if (!response.ok) {
-      console.error("YouTube API Error:", data)
-      throw new Error(data.error?.message || "Failed to fetch related videos")
+    if (!relatedResponse.ok) {
+      console.error("YouTube API Error:", relatedData)
+      throw new Error(relatedData.error?.message || "Failed to fetch related videos")
     }
 
-    if (!data.items || data.items.length === 0) {
+    if (!relatedData.items || relatedData.items.length === 0) {
       return NextResponse.json({ items: [] })
     }
 
-    // Fetch additional details for each video
-    const videoIds = data.items.map((item: any) => item.id.videoId).join(",")
-    const detailsUrl = `${baseUrl}/videos?part=statistics,contentDetails&id=${videoIds}&key=${apiKey}`
+    // Then, fetch additional details for each video
+    const videoIds = relatedData.items.map((item: any) => item.id.videoId).join(",")
+    const detailsUrl = `${baseUrl}/videos?part=snippet,statistics,contentDetails&id=${videoIds}&key=${apiKey}`
     const detailsResponse = await fetch(detailsUrl)
     const detailsData = await detailsResponse.json()
 
@@ -39,8 +39,8 @@ export async function GET(request: Request) {
     }
 
     // Merge search results with video details
-    data.items = data.items.map((item: any) => {
-      const details = detailsData.items?.find((detail: any) => detail.id === item.id.videoId)
+    const mergedItems = relatedData.items.map((item: any) => {
+      const details = detailsData.items.find((detail: any) => detail.id === item.id.videoId)
       return {
         ...item,
         statistics: details?.statistics,
@@ -48,7 +48,7 @@ export async function GET(request: Request) {
       }
     })
 
-    return NextResponse.json(data)
+    return NextResponse.json({ items: mergedItems })
   } catch (error) {
     console.error("Server Error:", error)
     return NextResponse.json(
