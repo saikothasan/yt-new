@@ -63,8 +63,8 @@ export function RelatedVideos({ videoId }: RelatedVideosProps) {
               },
             },
           },
-          statistics: item.statistics,
-          contentDetails: item.contentDetails,
+          statistics: item.statistics || {},
+          contentDetails: item.contentDetails || {},
         }))
 
         setVideos(formattedVideos)
