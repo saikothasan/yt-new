@@ -12,6 +12,8 @@ interface Video {
     thumbnails: {
       medium: {
         url: string
+        width: number
+        height: number
       }
     }
     channelTitle: string
@@ -49,7 +51,25 @@ export function VideoRecommendations({ category }: VideoRecommendationsProps) {
         if (data.error) {
           throw new Error(data.error)
         }
-        setVideos(data.items || [])
+
+        // Ensure the fetched data matches our Video interface
+        const formattedVideos: Video[] = data.items.map((item: any) => ({
+          id: item.id.videoId || item.id,
+          snippet: {
+            ...item.snippet,
+            thumbnails: {
+              medium: {
+                url: item.snippet.thumbnails.medium.url,
+                width: item.snippet.thumbnails.medium.width || 320,
+                height: item.snippet.thumbnails.medium.height || 180,
+              },
+            },
+          },
+          statistics: item.statistics,
+          contentDetails: item.contentDetails,
+        }))
+
+        setVideos(formattedVideos)
       } catch (error) {
         setError(error instanceof Error ? error.message : "An error occurred")
         console.error("Error fetching recommendations:", error)
