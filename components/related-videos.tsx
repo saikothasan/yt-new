@@ -12,6 +12,8 @@ interface Video {
     thumbnails: {
       medium: {
         url: string
+        width: number
+        height: number
       }
     }
     channelTitle: string
@@ -48,7 +50,24 @@ export function RelatedVideos({ videoId }: RelatedVideosProps) {
           throw new Error(data.error || "Failed to fetch related videos")
         }
 
-        setVideos(data.items || [])
+        // Ensure the fetched data matches our Video interface
+        const formattedVideos: Video[] = data.items.map((item: any) => ({
+          id: item.id.videoId || item.id,
+          snippet: {
+            ...item.snippet,
+            thumbnails: {
+              medium: {
+                url: item.snippet.thumbnails.medium.url,
+                width: item.snippet.thumbnails.medium.width || 320,
+                height: item.snippet.thumbnails.medium.height || 180,
+              },
+            },
+          },
+          statistics: item.statistics,
+          contentDetails: item.contentDetails,
+        }))
+
+        setVideos(formattedVideos)
       } catch (error) {
         console.error("Error fetching related videos:", error)
         setError(error instanceof Error ? error.message : "An unexpected error occurred")
