@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useSearchParams } from "next/navigation"
 import { VideoCard, VideoCardSkeleton } from "@/components/video-card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
@@ -13,6 +12,8 @@ interface Video {
     thumbnails: {
       medium: {
         url: string
+        width: number
+        height: number
       }
     }
     channelTitle: string
@@ -32,15 +33,13 @@ export function VideoGrid() {
   const [videos, setVideos] = useState<Video[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const searchParams = useSearchParams()
-  const query = searchParams.get("q")
 
   useEffect(() => {
     const fetchVideos = async () => {
       setLoading(true)
       setError(null)
       try {
-        const response = await fetch(`/api/videos${query ? `?q=${query}` : ""}`)
+        const response = await fetch(`/api/videos`)
         if (!response.ok) {
           throw new Error("Failed to fetch videos")
         }
@@ -48,7 +47,25 @@ export function VideoGrid() {
         if (data.error) {
           throw new Error(data.error)
         }
-        setVideos(data.items || [])
+
+        // Ensure the fetched data matches our Video interface
+        const formattedVideos: Video[] = data.items.map((item: any) => ({
+          id: item.id.videoId || item.id,
+          snippet: {
+            ...item.snippet,
+            thumbnails: {
+              medium: {
+                url: item.snippet.thumbnails.medium.url,
+                width: item.snippet.thumbnails.medium.width || 320,
+                height: item.snippet.thumbnails.medium.height || 180,
+              },
+            },
+          },
+          statistics: item.statistics,
+          contentDetails: item.contentDetails,
+        }))
+
+        setVideos(formattedVideos)
       } catch (error) {
         setError(error instanceof Error ? error.message : "An error occurred")
         console.error("Error fetching videos:", error)
@@ -57,7 +74,7 @@ export function VideoGrid() {
     }
 
     fetchVideos()
-  }, [query])
+  }, [])
 
   if (error) {
     return (
@@ -81,7 +98,7 @@ export function VideoGrid() {
   if (videos.length === 0) {
     return (
       <Alert>
-        <AlertDescription>{query ? "No videos found for your search." : "No videos available."}</AlertDescription>
+        <AlertDescription>No videos available.</AlertDescription>
       </Alert>
     )
   }
