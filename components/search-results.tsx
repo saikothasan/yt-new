@@ -5,12 +5,34 @@ import { VideoCard, VideoCardSkeleton } from "@/components/video-card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
 
+interface Video {
+  id: string | { videoId: string }
+  snippet: {
+    title: string
+    thumbnails: {
+      medium: {
+        url: string
+      }
+    }
+    channelTitle: string
+    publishedAt: string
+    channelId: string
+    description: string
+  }
+  statistics?: {
+    viewCount: string
+  }
+  contentDetails?: {
+    duration: string
+  }
+}
+
 interface SearchResultsProps {
   query: string
 }
 
 export function SearchResults({ query }: SearchResultsProps) {
-  const [videos, setVideos] = useState([])
+  const [videos, setVideos] = useState<Video[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
