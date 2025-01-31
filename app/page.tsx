@@ -1,6 +1,7 @@
+import { Suspense } from "react"
 import { Sidebar } from "@/components/sidebar"
 import { Header } from "@/components/header"
-import { VideoGrid } from "@/components/video-grid"
+import { VideoContent } from "@/components/video-content"
 
 export default function Home() {
   return (
@@ -9,7 +10,9 @@ export default function Home() {
       <div className="flex">
         <Sidebar />
         <main className="flex-1 p-4 sm:p-6 sm:ml-16 lg:ml-64">
-          <VideoGrid />
+          <Suspense fallback={<div>Loading...</div>}>
+            <VideoContent />
+          </Suspense>
         </main>
       </div>
     </div>
